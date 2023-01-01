@@ -1,16 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math
-from queue import PriorityQueue
-import heapq
 
-class RobotGame :
+#from queue import PriorityQueue
+import heapq
+import time
+
+class Game :
+    
+    
     
     
     def setup(self):
         
         self.gridHeight = int(input("\nEnter the height of the grid? "))
-        self.gridWidth = int(input("\nEnter the width of the grid? "))    
+        self.gridWidth = int(input("\nEnter the width of the grid? ")) 
+        
     
         self.posx = 0
         self.posy = 0
@@ -20,9 +24,33 @@ class RobotGame :
     def makeGrid(self):
         width = self.gridWidth
         height = self.gridHeight
+        print("We have  3 modes to allocate each number to the cell")
+        print("1) randomly allocates numbers to every cell")
+        print("2) you are given the choice to give each number the probability of a number to appear on the cells. All numbers have to add up to 1, otherwise it wont work. e.g 0.1")
+        
+        number = int(input("Enter a number: "))
         #creates a grid with random values between 0 and 9 and gets 
-        self.grid = map = np.random.randint(0,10, size = (width, height))
-        return self.grid
+        while not(number==1 or number==2):
+            number = int(input("Enter a number: "))
+        
+        if (number==1):
+            self.grid = map = np.random.randint(0,10, size = (width, height))
+            return self.grid
+        if (number==2):
+            print("enter a number on the probability for each number as percentages: ")
+            zero=float(input("0: "))
+            one=float(input("1: "))
+            two=float(input("2: "))
+            three=float(input("3: "))
+            four=float(input("4: "))
+            five=float(input("5: "))
+            six=float(input("6: "))
+            seven=float(input("7: "))
+            eight=float(input("8: "))
+            nine = 1-(zero+one+two+three+four+five+six+seven+eight)
+            self.grid = np.random.choice([0,1,2,3,4,5,6,7,8,9],(width,height),p=[zero, one, two, three, four, five, six, seven, eight, nine])
+            #print(np.count_nonzero(self.grid))
+            return self.grid
     
     
     def getGrid(self):
@@ -33,8 +61,16 @@ class RobotGame :
         self.posx = 0
         self.posy = 0
         
+    def meanPath(self):
+        grid = self.getGrid()
+        return np.mean(grid)
+    
+    
+        
+        
 
     def myAlgorithm(self):
+        #start = time.time()
         self.startingPosition()
         currentGrid = self.getGrid()
         width = self.gridWidth-1
@@ -46,10 +82,8 @@ class RobotGame :
         newArray = np.copy(currentGrid)
         #print (newArray)
         
-        #print(newArray)
-        #for i in range(m):
-         #   newPath[i] = np.array(n)
-        #newPath[0][0] = currentGrid[0][0]
+        #CALCULATES PATH FROM TOP LEFT TO BOTTOM RIGHT
+        
         
         #Calculates values in x-axis at y =0 grid 
         for i in range (1, m):
@@ -65,29 +99,56 @@ class RobotGame :
             for j in range (1, n):
                 newArray[i][j] = min(newArray[i-1][j], newArray[i][j-1]) + currentGrid[i][j]
                 
-        #print(currentGrid)
-            
-        return newArray[m-1][n-1]
-            
-            
-        #print (newPath[0][0], "and ", currentGrid[0][0])
+        #end = time.time()
+        #print(f"Solved grid with size {m*n} in {1000*(end - start):.3f}ms")
+        print (currentGrid)
         
         
-    
+        return newArray
+            
+
     #Code for dijktra's algorithm
     def dijkstra(self):
-        x= input("enter the x starting position \n")
-        y= input("enter the y starting position \n")
-        #x goal
-        xg = input("Enter the x finishing position \n")
-        yg = input("Enter the y finishing position \n")
-        
+        #startT = time.time()
         width = self.gridWidth
         height = self.gridHeight
         grid = self.getGrid()
         visited=np.zeros((width,height),dtype=bool)
+        distance = []
         
-        x,y=np.int(0),np.int(0)
+        print ("enter values >=0 and keep in mind values entered cannot be the same as values entered for grid size")
+        x= int(input("enter the x starting position "))
+        y= int(input("enter the y starting position "))
+        #x goal
+        xg = int(input("Enter the x finishing position "))
+        #y goal
+        yg = int(input("Enter the y finishing position "))
+        
+        #print("The mean path of this grid is: ", np.mean(grid))
+        #print("The average path of this grid is: ", np.average(grid))
+        
+        while ((x or y or xg or yg) < 0):
+            print ("enter values >=0")
+            x= int(input("enter the x starting position "))
+            y= int(input("enter the y starting position "))
+            #x goal
+            xg = int(input("Enter the x finishing position "))
+            #y goal
+            yg = int(input("Enter the y finishing position "))
+        
+        while ((x or xg) >= width) or ((y or yg) >= height):
+            print ("enter values within grid size")
+            x= int(input("enter the x starting position "))
+            y= int(input("enter the y starting position "))
+            
+            xg = int(input("Enter the x finishing position "))
+            
+            yg = int(input("Enter the y finishing position "))
+        
+
+        #print ("current value " , x, y, " ",grid[x][y], ", to: ", grid[xg][yg])
+        
+        #x,y=np.int(0),np.int(0)
         count = 0
         
         #List with x and y directions
@@ -95,85 +156,97 @@ class RobotGame :
         dcol = [0, 0, -1, 1]
         print (grid)
         
-        queue = [(grid[0][0], 0, 0)]
+        queue = [(grid[x][y], x, y)]
         while queue:
             count+=1
             
             dist, x, y = heapq.heappop(queue)
+            distance.append(dist)
       
             if visited[x][y]:
                 continue
             visited[x][y] = True
             
-            if x==width-1 and y==height-1:
-                return dist
+            if x==xg and y==yg:
+                break
+                #return dist
             
             for i in range(len(drow)):
               ni = x + drow[i]
               nj = y + dcol[i]
               if 0 <= ni < width and 0 <= nj < height:
-                  heapq.heappush(queue, (dist + grid[ni][nj], ni, nj))   
+                  heapq.heappush(queue, (dist + grid[ni][nj], ni, nj))
+        #endT = time.time()   
+        #print(f"Solved grid with size {width*height} in {1000*(endT - startT):.3f}s")
+        print("The shortest path length is: ", dist)
+        print("The mean value is: ", np.mean(grid))
         
-        return dist 
+        
+        
+        return dist, distance
+    
+while (True):
+    
+    print("Welcome...")
+    print("To initialize the game follow the instruction in the console")
+    rg = Game()
+    rg.setup()
+    rg.makeGrid()
+    print("We have two game modes: 1) heuristic algorithm and 2) uses Dijakstras algorithm using priority queues")
+    print("Choose you game mode: ")
+    number = int(input("Enter a number between 1 and 2\n"))
+    while not((number == 1) or (number == 2)):
+        number = int(input("Enter a number between 1 and 2\n"))
+        
+        
+    if (number == 1):
+        width = rg.gridWidth-1
+        height = rg.gridHeight-1
+        
+        startTime = time.time()
+        result = rg.myAlgorithm()        
+        endTime = time.time()
+        length= result[width][height]
+        
+        print(f"Solved grid with size {rg.gridWidth*rg.gridHeight} in {1000*(endTime - startTime):.5f}ms")
+        print("The path length of this algorithm is: ", length)
+        print("Plotting Graph \n ")
+        mean = rg.meanPath()
+        print("The mean path is: ", mean)
+        
+        size = np.arange(0, rg.gridWidth*rg.gridHeight)
+        y = result.flatten()
+        plt.title("heuristic Algorithm")
+        plt.xlabel("size")
+        plt.ylabel("length")
+        plt.plot(size, y, color ="green")
+        plt.show()
+        
+        
+        #print(timeit.Timer('for i in xrange(10): oct(i)').timeit())
+        #print(p)
+    
+    if (number == 2):
+        startT = time.time()
+        length, distance = rg.dijkstra()
+        endT = time.time()
+        
+        print(f"Solved grid with size {rg.gridWidth*rg.gridHeight} in {1000*(endT - startT):.5f}ms")
+        print("Plotting Graph \n ")
+        mean = rg.meanPath()
+        #n = (rg.gridWidth*rg.gridHeight)
+        size = np.arange(0, len(distance))
+        y = distance
+        plt.title("Dijakstra Algorithm")
+        plt.xlabel("size")
+        plt.ylabel("length")
+        plt.plot(size, y, color ="green")
+        plt.show()
+        
+        #length = rg.dijkstra()
         
         
 
+    
 
-rg = RobotGame()
-rg.setup()
-rg.makeGrid()
-print(rg.myAlgorithm())
-print("the length is: ", rg.dijkstra())
-
-'''
-cost=np.ones((self.gridWidth, self.gridHeight),dtype=int)*np.Infinity
-
-cost[0][0] = 0
-
-
-#originmap=np.ones((max_val,max_val),dtype=int)*np.nan
-visited=np.zeros((self.gridWidth,self.gridHeight),dtype=bool)
-finished = False
-x, y = self.posx, self.posy
-
-count=0
-
-while not finished:
-  # move to x+1,y
-      if x < width:
-            if cost[x+1,y]>currentGrid[x+1,y]+cost[x,y] and not visited[x+1,y]:
-                cost[x+1,y]=currentGrid[x+1,y]+cost[x,y]
-              
-      # move to x-1,y
-      if x>0:
-            if cost[x-1,y]>currentGrid[x-1,y]+cost[x,y] and not visited[x-1,y]:
-                cost[x-1,y]=currentGrid[x-1,y]+cost[x,y]
-              
-      # move to x,y+1
-      if y < height:
-            if cost[x,y+1]>currentGrid[x,y+1]+cost[x,y] and not visited[x,y+1]:
-                cost[x,y+1]=currentGrid[x,y+1]+cost[x,y]
-              
-      # move to x,y-1
-      if y>0:
-            if cost[x,y-1]>currentGrid[x,y-1]+cost[x,y] and not visited[x,y-1]:
-                cost[x,y-1]=currentGrid[x,y-1]+cost[x,y]
-              
-        
-      print("x: ", x , "y: ", y)
-      visited[x,y]=True
-      temp=cost
-      temp[np.where(visited)]=np.Infinity
-      # now we find the shortest path so far
-      minval=np.unravel_index(np.argmin(temp),np.shape(temp))
-      x,y=minval[0],minval[1]
-      
-      if x==width and y==height:
-        finished=True
-      count=count+1
-
-print('The path length is: '+np.str(cost[width,height]))
-print("The count to find the shortest path is: ", count)
-print('The dump/mean path should have been: '+np.str(9*((width + height)/2)))
-'''
 
